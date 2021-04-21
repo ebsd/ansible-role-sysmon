@@ -1,6 +1,6 @@
-- name: Create installation directory
+- name: Create configuration directory
   win_file:
-    path: "{{ sysmon_install_path }}"
+    path: "{{ sysmon_config_path }}"
     state: directory
 
 - name: Check if sysmon is installed
@@ -8,14 +8,14 @@
     name: sysmon
   register: sysmon_installed
   ignore_errors: yes
-  when: ansible_architecture == "32-bit"
+  when: ansible_architecture2 == "x86_32"
 
 - name: Check if sysmon64 is installed
   win_service:
     name: sysmon64
   register: sysmon64_installed
   ignore_errors: yes
-  when: ansible_architecture == "64-bit"
+  when: ansible_architecture2 == "x86_64"
 
 - name: Check sysmon version
   win_file_version:
@@ -23,7 +23,7 @@
   ignore_errors: yes
   register: sysmon_installed_version
   when:
-    - ansible_architecture == "32-bit"
+    - ansible_architecture2 == "x86_32"
     - sysmon_installed.exists
 
 - name: Check sysmon64 version
@@ -32,15 +32,18 @@
   ignore_errors: yes
   register: sysmon64_installed_version
   when:
-    - ansible_architecture == "64-bit"
+    - ansible_architecture2 == "x86_64"
     - sysmon64_installed.exists
 
+#- debug: var=sysmon64_installed_version
+
+# Uninstall Sysmon only if lower than version specified in sysmon_version variable.
 - name: Uninstall sysmon
   win_command: sysmon -u
   args:
     chdir: "{{ sysmon_install_path }}"
   when:
-    - ansible_architecture == "32-bit"
+    - ansible_architecture2 == "x86_32"
     - sysmon_installed.exists
     - sysmon_installed_version.failed or sysmon_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
 
@@ -49,16 +52,24 @@
   args:
     chdir: "{{ sysmon_install_path }}"
   when:
-    - ansible_architecture == "64-bit"
+    - ansible_architecture2 == "x86_64"
     - sysmon64_installed.exists
     - sysmon64_installed_version.failed or sysmon64_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
 
-- name: Download Sysmon
-  win_get_url:
-    url: "https://download.sysinternals.com/files/Sysmon.zip"
+#- name: Download Sysmon
+#  win_get_url:
+#    url: "https://download.sysinternals.com/files/Sysmon.zip"
+#    dest: "{{ sysmon_install_path }}\\Sysmon.zip"
+#  when:
+#    - ansible_architecture2 == "x86_32"
+#    - not sysmon_installed.exists or sysmon_installed_version.failed or sysmon_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
+
+- name: upload Sysmon.zip x86
+  win_copy:
+    src: files/Sysmon.zip
     dest: "{{ sysmon_install_path }}\\Sysmon.zip"
   when:
-    - ansible_architecture == "32-bit"
+    - ansible_architecture2 == "x86_32"
     - not sysmon_installed.exists or sysmon_installed_version.failed or sysmon_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
 
 - name: Unzip Sysmon
@@ -67,15 +78,23 @@
     dest: "{{ sysmon_install_path }}\\"
     delete_archive: yes
   when:
-    - ansible_architecture == "32-bit"
+    - ansible_architecture2 == "x86_32"
     - not sysmon_installed.exists or sysmon_installed_version.failed or sysmon_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
 
-- name: Download Sysmon64
-  win_get_url:
-    url: "https://download.sysinternals.com/files/Sysmon.zip"
+#- name: Download Sysmon64
+#  win_get_url:
+#    url: "https://download.sysinternals.com/files/Sysmon.zip"
+#    dest: "{{ sysmon_install_path }}\\Sysmon.zip"
+#  when:
+#    - ansible_architecture2 == "x86_64"
+#    - not sysmon64_installed.exists or sysmon64_installed_version.failed or sysmon64_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
+
+- name: upload Sysmon.zip x64
+  win_copy:
+    src: files/Sysmon.zip
     dest: "{{ sysmon_install_path }}\\Sysmon.zip"
   when:
-    - ansible_architecture == "64-bit"
+    - ansible_architecture2 == "x86_64"
     - not sysmon64_installed.exists or sysmon64_installed_version.failed or sysmon64_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
 
 - name: Unzip Sysmon64
@@ -84,31 +103,15 @@
     dest: "{{ sysmon_install_path }}\\"
     delete_archive: yes
   when:
-    - ansible_architecture == "64-bit"
+    - ansible_architecture2 == "x86_64"
     - not sysmon64_installed.exists or sysmon64_installed_version.failed or sysmon64_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
-
-- name: Upload sysmon configuration
-  win_copy:
-    src: files/{{ sysmon_config }}
-    dest: "{{ sysmon_install_path }}\\sysmonconfig.xml"
-  notify: reload-sysmon
-  when: ansible_architecture == "32-bit"
-  tags: configure
-
-- name: Upload sysmon64 configuration
-  win_copy:
-    src: files/{{ sysmon_config }}
-    dest: "{{ sysmon_install_path }}\\sysmonconfig.xml"
-  notify: reload-sysmon64
-  when: ansible_architecture == "64-bit"
-  tags: configure
 
 - name: Install sysmon
   win_command: sysmon -i -accepteula
   args:
     chdir: "{{ sysmon_install_path }}"
   when:
-    - ansible_architecture == "32-bit"
+    - ansible_architecture2 == "x86_32"
     - not sysmon_installed.exists or sysmon_installed_version.failed or sysmon_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
   notify: restart-sysmon
 
@@ -117,6 +120,22 @@
   args:
     chdir: "{{ sysmon_install_path }}"
   when:
-    - ansible_architecture == "64-bit"
+    - ansible_architecture2 == "x86_64"
     - not sysmon64_installed.exists or sysmon64_installed_version.failed or sysmon64_installed_version.win_file_version.product_version is version(sysmon_version, '<') # noqa 204
-  notify: restart-sysmon64
+  #notify: restart-sysmon64
+
+- name: Upload sysmon configuration
+  win_copy:
+    src: files/{{ sysmon_config }}
+    dest: "{{ sysmon_config_path }}\\sysmonconfig-export.xml"
+  notify: reload-sysmon
+  when: ansible_architecture2 == "x86_32"
+  tags: configure
+
+- name: Upload sysmon64 configuration
+  win_copy:
+    src: files/{{ sysmon_config }}
+    dest: "{{ sysmon_config_path }}\\sysmonconfig-export.xml"
+  notify: reload-sysmon64
+  when: ansible_architecture2 == "x86_64"
+  tags: configure

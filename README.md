@@ -19,6 +19,20 @@ Requirements
 
 None
 
+## Functionalities
+
+1. Upload and Install Sysmon if not already installed or if version is lower than `{{sysmon_version}}` variable.
+
+2. If version is lower, uninstall old version and then install new one.
+
+3. Update configuration when config file changed on source directory (files/).
+
+   To only run configuration file update without install, use "configure" tag :
+
+   ```bash
+   ansible-playbook install_sysmon.yml -i hosts --tags configure
+   ```
+
 Role Variables
 --------------
 
@@ -39,20 +53,35 @@ Example Playbook
 ----------------
 
 ```
-- name: Install sysmon to winlogbeat group
+- name: Install sysmon to sysmon_validation group
   hosts:
-    - winlogbeat
+    - sysmon_validation
   vars:
-    sysmon_install_path: "C:\tools\Sysmon"
-    sysmon_version: "11.11"
-    sysmon_config: olafhartong-sysmonconfig.xml
+    sysmon_install_path: 'C:\Windows'
+    sysmon_version: "13.02"
+    sysmon_config: sysmonconfig-export.xml
+    sysmon_config_path: 'C:\programdata\sysmon'
   roles:
     - ansible-role-sysmon
-  post_tasks:
-    - name: Restart Winlogbeat
-      win_shell: Restart-Service winlogbeat
 ```
 
+## Example hosts file
+
+```
+[sysmon_validation]
+host1
+host2
+host3
+
+[sysmon_validation:vars]
+# use `$ kinit admin@domain.lan` to get a kerberos ticket
+ansible_user=admin@domain.lan
+#ansible_password=password
+ansible_connection=winrm
+ansible_port=5985
+ansible_winrm_transport=kerberos
+ansible_winrm_server_cert_validation=ignore
+```
 
 License
 -------
