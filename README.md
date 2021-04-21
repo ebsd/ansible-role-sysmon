@@ -1,10 +1,7 @@
-ansible-role-sysmon
-=========
+# ansible-role-sysmon
 
 [![GitHub license](https://img.shields.io/github/license/j91321/ansible-role-sysmon?style=flat-square)](https://github.com/j91321/ansible-role-sysmon/blob/master/LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/j91321/ansible-role-sysmon.svg?style=flat-square)](https://github.com/j91321/ansible-role-sysmon/commit/master)
-![Build](https://github.com/j91321/ansible-role-sysmon/workflows/Test%20ansible%20role%20installation%20and%20publish%20to%20galaxy/badge.svg)
-[![Twitter](https://img.shields.io/twitter/follow/j91321.svg?style=social&label=Follow)](https://twitter.com/j91321)
+[![GitHub last commit](https://img.shields.io/github/last-commit/ebsd/ansible-role-sysmon.svg?style=flat-square)](https://github.com/ebsd/ansible-role-sysmon/commit/master)
 
 An Ansible role that installs Sysmon with selected configuration. Included configurations are [SwiftOnSecurity sysmon config](https://github.com/SwiftOnSecurity/sysmon-config) or [olafhartong sysmon-modular config](https://github.com/olafhartong/sysmon-modular). You can also supply your own config.
 
@@ -14,8 +11,7 @@ Supported platforms:
 - Windows Server 2019
 - Windows Server 2016
 
-Requirements
-------------
+## Requirements
 
 None
 
@@ -33,8 +29,14 @@ None
    ansible-playbook install_sysmon.yml -i hosts --tags configure
    ```
 
-Role Variables
---------------
+## Usage
+
+1. Place Symon.zip from sysinternals inside files/ directory.
+2. Place your specific xml configuration file inside files/ direcory.
+3. Write a playbook (see example).
+4. Run it ! `$ ansible-playbook install_sysmon.yml -i hosts`
+
+## Role Variables
 
 Ansible variables from defaults/main.yml
 
@@ -44,13 +46,11 @@ sysmon_version: "11.11"
 sysmon_config: swiftonsecurity-sysmonconfig.xml
 ```
 
-Dependencies
-------------
+## Dependencies
 
 None
 
-Example Playbook
-----------------
+## Example Playbook
 
 ```
 - name: Install sysmon to sysmon_validation group
@@ -83,13 +83,11 @@ ansible_winrm_transport=kerberos
 ansible_winrm_server_cert_validation=ignore
 ```
 
-License
--------
+## License
 
 MIT
 
-Author Information
-------------------
+## Author Information
 
 - j91321
 - [viktor0x53](https://github.com/viktor0x53)
